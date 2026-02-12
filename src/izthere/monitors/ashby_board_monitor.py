@@ -13,6 +13,10 @@ logger = get_logger()
 
 
 class AshbyBoardMonitor(Monitor, monitor_type="ashby_board"):
+    """
+    Detects jobs from Ashby boards with location/job type/remote and job title keywords filters.
+    """
+
     def __init__(
         self,
         *,

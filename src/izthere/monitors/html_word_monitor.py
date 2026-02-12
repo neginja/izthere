@@ -51,10 +51,6 @@ class HtmlWordMonitor(Monitor, monitor_type="html_word"):
 
     @staticmethod
     def _extract_visible_text(html: str) -> str:
-        """
-        Uses BeautifulSoup to remove all markup and return a plain-text string.
-        Scripts, styles, and comments are discarded automatically.
-        """
         soup: BeautifulSoup = BeautifulSoup(html, "html.parser")
 
         # initial trim of uninteresting invisible content
@@ -82,9 +78,6 @@ class HtmlWordMonitor(Monitor, monitor_type="html_word"):
 
     @override
     async def run(self) -> tuple[bool, str | None]:
-        """
-        Returns `True` if *any* keyword is found in the visible page text.
-        """
         logger.debug(f"[{self.monitor_type}] executing monitor '{self.question}'")
         self._last_checked = datetime.now(timezone.utc)
 

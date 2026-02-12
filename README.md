@@ -1,6 +1,6 @@
 # IzThere
 
-A tiny monnitoring/notification service for the web.
+A tiny monitoring/notification service to not miss anything effortlessly.
 
 ## Example
 

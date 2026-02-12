@@ -14,6 +14,10 @@ logger = get_logger()
 
 
 class XpathWordMonitor(Monitor, monitor_type="xpath_word"):
+    """
+    Detects the presence of one or more keywords in the *visible* text of an HTML tag in a page (provided as xpath).
+    """
+
     def __init__(
         self,
         *,
