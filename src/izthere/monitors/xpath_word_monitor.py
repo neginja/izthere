@@ -8,7 +8,7 @@ from typing_extensions import override
 
 from izthere.logger import get_logger
 from izthere.monitors.base import Monitor
-from izthere.web_utils import fetch_html, fetch_html_no_js
+from izthere.web_utils import fetch_html
 
 logger = get_logger()
 
@@ -28,14 +28,12 @@ class XpathWordMonitor(Monitor, monitor_type="xpath_word"):
         user_agent: str | None = None,
         timeout_seconds: int = 10,
         case_sensitive: bool = False,
-        use_javascript: bool = False,
     ) -> None:
         self.question: str = name
         self.url: str = url
         self.xpath: str = xpath
         self.keywords: list[str] = keywords
         self.case_sensitive: bool = case_sensitive
-        self.use_javascript: bool = use_javascript
         self.headers: dict[str, str] = {"User-Agent": user_agent} if user_agent else {}
         self.timeout: int = timeout_seconds
         self._last_checked: datetime | None = None
@@ -88,14 +86,9 @@ class XpathWordMonitor(Monitor, monitor_type="xpath_word"):
         logger.debug(f"[{self.monitor_type}] executing monitor '{self.question}'")
         self._last_checked = datetime.now(timezone.utc)
 
-        if self.use_javascript:
-            html = await fetch_html(
-                url=self.url, timeout=self.timeout, headers=self.headers
-            )
-        else:
-            html = await fetch_html_no_js(
-                url=self.url, timeout=self.timeout, headers=self.headers
-            )
+        html = await fetch_html(
+            url=self.url, timeout=self.timeout, headers=self.headers
+        )
 
         visible_text: str = self._extract_from_xpath(html, self.xpath)
 
@@ -122,7 +115,6 @@ if __name__ == "__main__":
         url="https://duckduckgo.com",
         xpath='//*[@id="__next"]/div/main/div[1]/div[2]/div[1]/div/div[1]/fieldset/label[1]/span',
         keywords=["search"],
-        use_javascript=False,
     )
 
     r, _ = asyncio.run(w.run())
