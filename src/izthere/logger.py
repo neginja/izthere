@@ -38,8 +38,6 @@ class SimpleFormatter(logging.Formatter):
 
     @override
     def format(self, record: logging.LogRecord) -> str:
-        # Instead of manual string building, let the base class
-        # do the heavy lifting which is more 3.14 compatible.
         return super().format(record)
 
 

@@ -25,6 +25,8 @@ build-backend = "uv_build"
 izthere = "izthere.main:main"
 
 [tool.pyright]
+venvPath = "."
+venv = ".venv"
 reportExplicitAny = false
 reportAny = false
 reportUnknownArgumentType = false

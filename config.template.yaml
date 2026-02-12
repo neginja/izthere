@@ -5,12 +5,10 @@ monitors:
     keywords:
       - "video editing"
       - "film editing"
-      - "movie editor"
-      - "da vinci resolve"
     case_sensitive: false
     timeout_seconds: 15
     use_javascript: false
-    schedule: "*/30 * * * *" 
+    schedule: "0 12 * * *" 
     notifiers:
       - telegram_main
 

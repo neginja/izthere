@@ -60,7 +60,7 @@ async def setup() -> None:
         async def job(
             m: Monitor = monitor,
             ns: list[Notifier] = associated_notifiers,
-        ) -> None:  # default args capture current loop values
+        ) -> None:
             answer, extra = await m.run()
             ts: datetime = datetime.now(timezone.utc)
             for n in ns:
@@ -69,11 +69,13 @@ async def setup() -> None:
                 )
 
         trigger: CronTrigger = CronTrigger.from_crontab(schedule)
+        now = datetime.now()
+        next_exec = trigger.get_next_fire_time(None, now)
         logger.info(
-            f"loaded one monitor '{question}' with {len(associated_notifiers)} notifiers"
+            f"loaded one monitor '{question}' with {len(associated_notifiers)} notifier(s) on schedule (cron) '{schedule}', next execution {next_exec}"
         )
         name = re.sub(r"[^a-z0-9_]+", "", re.sub(r"[ \t]+", "_", question.lower()))
-        scheduler.add_job(job, trigger, name=name, max_instances=1)
+        _ = scheduler.add_job(job, trigger, name=name, max_instances=1)
         logger.info(f"monitor '{question}' scheduled")
 
     scheduler.start()

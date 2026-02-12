@@ -12,10 +12,12 @@ monitors:
     type: html_word
     url: "https://www.humblebundle.com/software"
     keywords:
-      - "software"
+      - "video editing"
+      - "film making"
+      - "da vinci"
     case_sensitive: false
     timeout_seconds: 15
-    schedule: "* * */1 * *" # once a day
+    schedule: "0 12 * * *" # once a day at 12
     notifiers:
       - telegram_main
   - question: Iz There some engineering jobs at DuckDuckGo for my location
@@ -27,7 +29,7 @@ monitors:
       - engineer
     case_sensitive: false
     timeout_seconds: 15
-    schedule: "* * */1 * *" # once a day
+    schedule: "0 12 * * *" # once a day at 12
     notifiers:
       - telegram_main
 

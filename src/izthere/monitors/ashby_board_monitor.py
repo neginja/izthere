@@ -29,11 +29,10 @@ class AshbyBoardMonitor(Monitor, monitor_type="ashby_board"):
         self.keywords: list[str] = keywords
         self.location_name: str | None = location_name
         self.remote_only: bool = remote_only
-        self.employment_type = employment_type
+        self.employment_type: str | None = employment_type
         self.timeout_seconds: int = timeout_seconds
         self._last_checked: datetime | None = None
 
-        # Extract company slug from URL (e.g., https://jobs.ashbyhq.com/buffer -> buffer)
         path = urlparse(url).path.strip("/")
         self.company_slug: str = path.split("?")[0]
         self.api_url: str = (
@@ -115,7 +114,6 @@ class AshbyBoardMonitor(Monitor, monitor_type="ashby_board"):
 
 
 if __name__ == "__main__":
-    # Example usage
     monitor = AshbyBoardMonitor(
         name="test",
         url="https://jobs.ashbyhq.com/duck-duck-go",
