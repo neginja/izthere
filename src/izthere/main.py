@@ -27,10 +27,10 @@ def load_config(file_path: Path) -> Any:
 
 
 async def setup() -> None:
-    config_path = Path(os.environ.get("IS_CONFIG_PATH", "./config.yaml"))
+    config_path = Path(os.environ.get("IZTHERE_CONFIG_PATH", "./config.yaml"))
     if not config_path.exists():
         raise FileNotFoundError(
-            "Configuration file not found, set IS_CONFIG_PATH to a valid path"
+            "Configuration file not found, set IZTHERE_CONFIG_PATH to a valid path"
         )
     configs: dict[str, Any] = load_config(config_path)
 

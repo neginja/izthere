@@ -40,6 +40,9 @@ notifiers:
     chat_id: "<CHANNEL_OR_GROUP_ID>"
 ```
 
+> [!NOTE]
+> default path for config is in the root of this repo as `config.yaml` but you can also set the `IZTHERE_CONFIG_PATH` env var to override it.
+
 The above monitors will check everyday the DDG ashby board and humble bundle software page and send me a notification via telegram.
 
 Monitors and Notifiers implement an interface, so you can extend it to anything you need.
