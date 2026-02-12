@@ -1,0 +1,21 @@
+monitors:
+  - question: Iz There a video editing software bundle?
+    type: html_word
+    url: "https://www.humblebundle.com/software"
+    keywords:
+      - "video editing"
+      - "film editing"
+      - "movie editor"
+      - "da vinci resolve"
+    case_sensitive: false
+    timeout_seconds: 15
+    use_javascript: false
+    schedule: "*/30 * * * *" 
+    notifiers:
+      - telegram_main
+
+notifiers:
+  - name: telegram_main
+    type: telegram
+    bot_token: "<YOUR_BOT_TOKEN>"
+    chat_id: "<CHANNEL_OR_GROUP_ID>"
