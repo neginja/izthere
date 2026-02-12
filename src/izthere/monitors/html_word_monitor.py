@@ -5,7 +5,7 @@ from typing import Any, override
 from bs4 import BeautifulSoup  # <-- new dependency
 
 from izthere.logger import get_logger
-from izthere.web_utils import fetch_html, fetch_html_no_js
+from izthere.web_utils import fetch_html
 
 from .base import Monitor
 
@@ -26,13 +26,11 @@ class HtmlWordMonitor(Monitor, monitor_type="html_word"):
         user_agent: str | None = None,
         timeout_seconds: int = 10,
         case_sensitive: bool = False,
-        use_javascript: bool = False,
     ) -> None:
         self.question: str = name
         self.url: str = url
         self.keywords: list[str] = keywords
         self.case_sensitive: bool = case_sensitive
-        self.use_javascript: bool = use_javascript
         self.headers: dict[str, str] = {"User-Agent": user_agent} if user_agent else {}
         self.timeout: int = timeout_seconds
         self._last_checked: datetime | None = None
@@ -81,14 +79,9 @@ class HtmlWordMonitor(Monitor, monitor_type="html_word"):
         logger.debug(f"[{self.monitor_type}] executing monitor '{self.question}'")
         self._last_checked = datetime.now(timezone.utc)
 
-        if self.use_javascript:
-            html = await fetch_html(
-                url=self.url, timeout=self.timeout, headers=self.headers
-            )
-        else:
-            html = await fetch_html_no_js(
-                url=self.url, timeout=self.timeout, headers=self.headers
-            )
+        html = await fetch_html(
+            url=self.url, timeout=self.timeout, headers=self.headers
+        )
 
         visible_text: str = self._extract_visible_text(html)
 
