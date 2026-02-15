@@ -5,7 +5,7 @@ from typing import Any, override
 from bs4 import BeautifulSoup  # <-- new dependency
 
 from izthere.logger import get_logger
-from izthere.web_utils import fetch_html
+from izthere.monitors.web_utils import fetch_html
 
 from .base import Monitor
 

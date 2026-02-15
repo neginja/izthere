@@ -21,17 +21,27 @@ monitors:
     notifiers:
       - telegram_main
   - question: Iz There some engineering jobs at DuckDuckGo for my location
-    type: ashby_board
-    url: "https://jobs.ashbyhq.com/duck-duck-go"
-    location_name: "<your country>"
-    remote_only: true
-    keywords:
-      - engineer
-    case_sensitive: false
-    timeout_seconds: 15
-    schedule: "0 12 * * *" # once a day at 12
-    notifiers:
-      - telegram_main
+    type: json_api
+    url: "https://api.ashbyhq.com/posting-api/job-board/duck-duck-go"
+    items_path: "jobs"
+    extras_path: "jobUrl"
+    predicates:
+      - path: employmentType
+        op: equal_insensitive
+        value: fulltime # we want fulltime position
+      - path: location
+        op: equal_insensitive
+        value: "remote" # fully remote
+      - op: sub_parser
+        parser:
+          items_path: secondaryLocations # this is a sub-parser for array which tells us from which location remote is allowed
+          predicates:
+            - path: "location"
+              op: contains_insensitive
+              value: japan
+      - path: title # filter on some job titles
+        op: contains_any_insensitive
+        value: ["engineer", "backend", "platform"]
 
 notifiers:
   - name: telegram_main
