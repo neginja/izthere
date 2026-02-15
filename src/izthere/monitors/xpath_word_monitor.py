@@ -8,7 +8,7 @@ from typing_extensions import override
 
 from izthere.logger import get_logger
 from izthere.monitors.base import Monitor
-from izthere.web_utils import fetch_html
+from izthere.monitors.web_utils import fetch_html
 
 logger = get_logger()
 
