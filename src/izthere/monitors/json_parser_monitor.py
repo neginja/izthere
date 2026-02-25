@@ -87,6 +87,7 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
             url=cfg["url"],
             items_path=cfg["items_path"],
             predicates=[Predicate.from_config(p) for p in cfg["predicates"]],
+            extras_path=cfg.get("extras_path"),
             timeout_seconds=cfg.get("timeout_seconds", 15),
         )
 
@@ -104,10 +105,10 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
         op_func = self.OPERATORS.get(pred.op)
 
         if not op_func:
-            # fallback for typos like 'contains_insensiteve' in your YAML
             return False
 
-        return op_func(actual_value, pred.value)
+        res = op_func(actual_value, pred.value)
+        return res
 
     @override
     async def run(self) -> tuple[bool, str | None]:
@@ -121,16 +122,17 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
             return False, f"unexpected error fix me! {e}"
 
         matches: list[str] = []
+        found = False
         for item in items:
             if all(self._evaluate_predicate(item, p) for p in self.predicates):
+                found = True
                 # extract the extras if any
                 if self.extras_path:
                     m = item.get(self.extras_path)
                     if m:
                         matches.append(str(m))
 
-        found = len(matches) > 0
-        return found, "\n".join(matches) if found else None
+        return found, "\n".join(matches) if matches else None
 
     @property
     @override
@@ -164,7 +166,7 @@ if __name__ == "__main__":
                     items_path="secondaryLocations",
                     predicates=[
                         Predicate(
-                            op="contains_insensitive", path="location", value="usa"
+                            op="contains_insensitive", path="location", value="japan"
                         )
                     ],
                 ),
