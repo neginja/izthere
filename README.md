@@ -78,13 +78,7 @@ You'll need `uv`
 uv sync
 ```
 
-then for use of JS when loading web pages
-
-```console
-uv run python -m playwright install
-```
-
-Finally
+and
 
 ```console
 uv run izthere
