@@ -66,14 +66,14 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
         self,
         name: str,
         url: str,
-        items_path: str,
+        items_path: str | None,
         predicates: list[Predicate],
         extras_path: str | None = None,
         timeout_seconds: int = 15,
     ) -> None:
         self.question: str = name
         self.url: str = url
-        self.items_path: str = items_path
+        self.items_path: str | None = items_path
         self.extras_path: str | None = extras_path
         self.predicates: list[Predicate] = predicates
         self.timeout_seconds: int = timeout_seconds
@@ -93,13 +93,25 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
 
     def _evaluate_predicate(self, item: Any, pred: Predicate) -> bool:
         if pred.op == "sub_parser" and pred.parser:
-            sub_items: list[Any] | None = item.get(pred.parser.items_path, [])
-            if not isinstance(sub_items, list):
+            sub_items: Any | None = item.get(pred.parser.items_path)
+            if not sub_items:
                 return False
-            return any(
-                all(self._evaluate_predicate(si, sp) for sp in pred.parser.predicates)
-                for si in sub_items
-            )
+
+            if isinstance(sub_items, list):
+                return any(
+                    all(
+                        self._evaluate_predicate(si, sp)
+                        for sp in pred.parser.predicates
+                    )
+                    for si in sub_items
+                )
+            elif isinstance(sub_items, dict):
+                return all(
+                    self._evaluate_predicate(sub_items, sp)
+                    for sp in pred.parser.predicates
+                )
+            else:
+                return False
 
         actual_value = item.get(pred.path) if pred.path else item
         op_func = self.OPERATORS.get(pred.op)
@@ -116,19 +128,31 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
 
         try:
             data = await fetch_json(url=self.url, timeout=self.timeout_seconds)
-            items = data.get(self.items_path, [])
+            items = data.get(self.items_path) if self.items_path else data
         except Exception as e:
             logger.error(f"Failed to fetch JSON from {self.url}: {e}")
             return False, f"unexpected error fix me! {e}"
 
         matches: list[str] = []
         found = False
-        for item in items:
-            if all(self._evaluate_predicate(item, p) for p in self.predicates):
+
+        if not items:
+            return False, None
+
+        if isinstance(items, list):
+            for item in items:
+                if all(self._evaluate_predicate(item, p) for p in self.predicates):
+                    found = True
+                    # extract the extras if any
+                    if self.extras_path:
+                        m = item.get(self.extras_path)
+                        if m:
+                            matches.append(str(m))
+        elif isinstance(items, dict):
+            if all(self._evaluate_predicate(items, p) for p in self.predicates):
                 found = True
-                # extract the extras if any
                 if self.extras_path:
-                    m = item.get(self.extras_path)
+                    m = items.get(self.extras_path)
                     if m:
                         matches.append(str(m))
 
