@@ -66,14 +66,14 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
         self,
         name: str,
         url: str,
-        items_path: str,
+        items_path: str | None,
         predicates: list[Predicate],
         extras_path: str | None = None,
         timeout_seconds: int = 15,
     ) -> None:
         self.question: str = name
         self.url: str = url
-        self.items_path: str = items_path
+        self.items_path: str | None = items_path
         self.extras_path: str | None = extras_path
         self.predicates: list[Predicate] = predicates
         self.timeout_seconds: int = timeout_seconds
@@ -128,7 +128,7 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
 
         try:
             data = await fetch_json(url=self.url, timeout=self.timeout_seconds)
-            items = data.get(self.items_path)
+            items = data.get(self.items_path) if self.items_path else data
         except Exception as e:
             logger.error(f"Failed to fetch JSON from {self.url}: {e}")
             return False, f"unexpected error fix me! {e}"
@@ -203,8 +203,6 @@ if __name__ == "__main__":
         ],
         extras_path="jobUrl",
     )
-
-    # TODO test with an API that return a single object and not a collection
 
     result = asyncio.run(monitor.run())
     print(f"result: {result}")
