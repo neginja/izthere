@@ -1,7 +1,10 @@
+import html
 from datetime import datetime, timezone
 from typing import Any, override
+from urllib.parse import urlparse
 
 from telegram import Bot
+from telegram.helpers import escape_markdown
 
 from izthere.logger import get_logger
 from izthere.notifiers.base import Notifier
@@ -33,19 +36,25 @@ class TelegramNotifier(Notifier, notifier_type="telegram"):
         local_ts = datetime.now(timezone.utc).astimezone()
         tz_name = local_ts.tzname()
 
+        parsed_where = urlparse(where)
+        clean_display_url = (
+            f"{parsed_where.scheme}://{parsed_where.netloc}{parsed_where.path}"
+        )
+        escaped_domain = escape_markdown(clean_display_url, version=2)
+
         text = (
-            f"*What:* {what}\n"
-            f"*Where:* {where}\n"
+            f"*What:* {escape_markdown(what, version=2)}\n"
+            f"*Where:* [{escaped_domain}]({escape_markdown(where, version=2)})\n"
             f"*Answer:* {status}\n"
             f"*Checked at:* `{local_ts.strftime('%Y-%m-%d %H:%M:%S')} {tz_name}`"
         )
 
         if extra:
-            text = "\n\n".join([text, f"*Extra:* {extra}"])
+            text = "\n\n".join([text, f"*Extra:* {escape_markdown(extra, version=2)}"])
 
         try:
             _ = await self.bot.send_message(
-                chat_id=self.chat_id, text=text, parse_mode="Markdown"
+                chat_id=self.chat_id, text=text, parse_mode="MarkdownV2"
             )
         except Exception:
             logger.exception(

@@ -23,7 +23,7 @@ def load_config(file_path: Path) -> Any:
     if not file_path.is_file():
         return []
     with file_path.open("r", encoding="utf-8") as f:
-        return yaml.safe_load(f) or []
+        return yaml.safe_load(f) or {}
 
 
 async def setup() -> None:
@@ -87,6 +87,13 @@ async def setup() -> None:
 
 
 def main() -> None:
+    try:
+        asyncio.run(setup())
+    except KeyboardInterrupt:
+        logger.info("stopped")
+
+
+if __name__ == "__main__":
     try:
         asyncio.run(setup())
     except KeyboardInterrupt:

@@ -9,7 +9,7 @@ logger = get_logger()
 
 async def fetch_json(
     url: str, timeout: int = 10, headers: dict[str, str] | None = None
-) -> dict[str, Any]:
+) -> dict[str, Any] | list[dict[str, Any]]:
     async with httpx.AsyncClient(headers=headers, timeout=timeout) as client:
         resp: httpx.Response = await client.get(url)
         _ = resp.raise_for_status()

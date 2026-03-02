@@ -23,16 +23,16 @@ class HtmlWordMonitor(Monitor, monitor_type="html_word"):
         name: str,
         url: str,
         keywords: list[str],
-        user_agent: str | None = None,
         timeout_seconds: int = 10,
         case_sensitive: bool = False,
+        headers: dict[str, str] | None = None,
     ) -> None:
         self.question: str = name
         self.url: str = url
         self.keywords: list[str] = keywords
         self.case_sensitive: bool = case_sensitive
-        self.headers: dict[str, str] = {"User-Agent": user_agent} if user_agent else {}
         self.timeout: int = timeout_seconds
+        self.headers: dict[str, str] | None = headers
         self._last_checked: datetime | None = None
 
     @classmethod
@@ -42,7 +42,7 @@ class HtmlWordMonitor(Monitor, monitor_type="html_word"):
             name=cfg["question"],
             url=cfg["url"],
             keywords=cfg["keywords"],
-            user_agent=cfg.get("user_agent", None),
+            headers=cfg.get("headers"),
             timeout_seconds=cfg.get("timeout_seconds", 10),
             case_sensitive=cfg.get("case_sensitive", False),
         )
@@ -79,20 +79,26 @@ class HtmlWordMonitor(Monitor, monitor_type="html_word"):
         logger.debug(f"[{self.monitor_type}] executing monitor '{self.question}'")
         self._last_checked = datetime.now(timezone.utc)
 
-        html = await fetch_html(
-            url=self.url, timeout=self.timeout, headers=self.headers
-        )
+        try:
+            html = await fetch_html(
+                url=self.url, timeout=self.timeout, headers=self.headers
+            )
+        except Exception as e:
+            return False, f"unexpected error fix me! {e}"
+
+        if not html:
+            return False, "no data retrieved, fix me!"
 
         visible_text: str = self._extract_visible_text(html)
 
         if self.case_sensitive:
-            haystack = visible_text
-            needles = self.keywords
+            page_text = visible_text
+            search_keywords = self.keywords
         else:
-            haystack = visible_text.lower()
-            needles = [kw.lower() for kw in self.keywords]
+            page_text = visible_text.lower()
+            search_keywords = [kw.lower() for kw in self.keywords]
 
-        answer: bool = any(needle in haystack for needle in needles)
+        answer: bool = any(kw in page_text for kw in search_keywords)
         logger.info(
             f"[{self.monitor_type}] monitor '{self.question}' executed, answer={answer}"
         )

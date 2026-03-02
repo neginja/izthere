@@ -60,6 +60,12 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
         "contains_any_insensitive": lambda val, targets: any(
             str(t).lower() in str(val).lower() for t in targets
         ),
+        "any_item_contains_insensitive": lambda val, target: any(
+            str(target).lower() in str(item).lower() for item in val
+        ),
+        "any_item_contains_any_insensitive": lambda val, targets: any(
+            str(t).lower() in str(item).lower() for t in targets for item in val
+        ),
     }
 
     def __init__(
@@ -70,6 +76,7 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
         predicates: list[Predicate],
         extras_path: str | None = None,
         timeout_seconds: int = 15,
+        headers: dict[str, str] | None = None,
     ) -> None:
         self.question: str = name
         self.url: str = url
@@ -77,6 +84,7 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
         self.extras_path: str | None = extras_path
         self.predicates: list[Predicate] = predicates
         self.timeout_seconds: int = timeout_seconds
+        self.headers: dict[str, str] | None = headers
         self._last_checked: datetime | None = None
 
     @classmethod
@@ -88,6 +96,7 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
             items_path=cfg["items_path"],
             predicates=[Predicate.from_config(p) for p in cfg["predicates"]],
             extras_path=cfg.get("extras_path"),
+            headers=cfg.get("headers"),
             timeout_seconds=cfg.get("timeout_seconds", 15),
         )
 
@@ -117,9 +126,12 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
         op_func = self.OPERATORS.get(pred.op)
 
         if not op_func:
-            return False
+            raise ValueError(f"operator not valid {pred.op}")
 
         res = op_func(actual_value, pred.value)
+        logger.debug(
+            f"evaluation of predicate {pred.op} using actual={actual_value}, predicate_value={pred.value}, result={res}"
+        )
         return res
 
     @override
@@ -127,8 +139,14 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
         self._last_checked = datetime.now(timezone.utc)
 
         try:
-            data = await fetch_json(url=self.url, timeout=self.timeout_seconds)
-            items = data.get(self.items_path) if self.items_path else data
+            data: dict[str, Any] | list[dict[str, Any]] = await fetch_json(
+                url=self.url, timeout=self.timeout_seconds, headers=self.headers
+            )
+            if isinstance(data, dict):
+                items = data.get(self.items_path) if self.items_path else data
+            else:
+                items = data
+
         except Exception as e:
             logger.error(f"Failed to fetch JSON from {self.url}: {e}")
             return False, f"unexpected error fix me! {e}"
@@ -137,7 +155,7 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
         found = False
 
         if not items:
-            return False, None
+            return False, "no data retrieved, fix me!"
 
         if isinstance(items, list):
             for item in items:
@@ -145,16 +163,26 @@ class JSONParserMonitor(Monitor, monitor_type="json_api"):
                     found = True
                     # extract the extras if any
                     if self.extras_path:
-                        m = item.get(self.extras_path)
-                        if m:
-                            matches.append(str(m))
+                        extras_sub_paths = self.extras_path.strip(".").split(".")
+                        extra_data = item
+                        for sp in extras_sub_paths:
+                            if not isinstance(extra_data, dict):
+                                break
+                            extra_data = extra_data.get(sp) if extra_data else None
+                        if extra_data:
+                            matches.append(str(extra_data))
         elif isinstance(items, dict):
             if all(self._evaluate_predicate(items, p) for p in self.predicates):
                 found = True
                 if self.extras_path:
-                    m = items.get(self.extras_path)
-                    if m:
-                        matches.append(str(m))
+                    extras_sub_paths = self.extras_path.split(".")
+                    extra_data = items
+                    for sp in extras_sub_paths:
+                        if not isinstance(extra_data, dict):
+                            break
+                        extra_data = extra_data.get(sp) if extra_data else None
+                    if extra_data:
+                        matches.append(str(extra_data))
 
         return found, "\n".join(matches) if matches else None
 
