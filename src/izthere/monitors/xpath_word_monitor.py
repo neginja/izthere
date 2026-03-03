@@ -25,17 +25,17 @@ class XpathWordMonitor(Monitor, monitor_type="xpath_word"):
         url: str,
         xpath: str,
         keywords: list[str],
-        user_agent: str | None = None,
         timeout_seconds: int = 10,
         case_sensitive: bool = False,
+        headers: dict[str, str] | None = None,
     ) -> None:
         self.question: str = name
         self.url: str = url
         self.xpath: str = xpath
         self.keywords: list[str] = keywords
         self.case_sensitive: bool = case_sensitive
-        self.headers: dict[str, str] = {"User-Agent": user_agent} if user_agent else {}
         self.timeout: int = timeout_seconds
+        self.headers: dict[str, str] | None = headers
         self._last_checked: datetime | None = None
 
     @classmethod
@@ -46,7 +46,7 @@ class XpathWordMonitor(Monitor, monitor_type="xpath_word"):
             url=cfg["url"],
             xpath=cfg["xpath"],
             keywords=cfg["keywords"],
-            user_agent=cfg.get("user_agent"),
+            headers=cfg.get("headers"),
             timeout_seconds=cfg.get("timeout_seconds", 10),
             case_sensitive=cfg.get("case_sensitive", False),
         )
@@ -85,10 +85,15 @@ class XpathWordMonitor(Monitor, monitor_type="xpath_word"):
     async def run(self) -> tuple[bool, str | None]:
         logger.debug(f"[{self.monitor_type}] executing monitor '{self.question}'")
         self._last_checked = datetime.now(timezone.utc)
+        try:
+            html = await fetch_html(
+                url=self.url, timeout=self.timeout, headers=self.headers
+            )
+        except Exception as e:
+            return False, f"unexpected error fix me! {e}"
 
-        html = await fetch_html(
-            url=self.url, timeout=self.timeout, headers=self.headers
-        )
+        if not html:
+            return False, "no data retrieved, fix me!"
 
         visible_text: str = self._extract_from_xpath(html, self.xpath)
 
