@@ -218,7 +218,7 @@ if __name__ == "__main__":
                     items_path="secondaryLocations",
                     predicates=[
                         Predicate(
-                            op="contains_insensitive", path="location", value="japan"
+                            op="contains_insensitive", path="location", value="usa"
                         )
                     ],
                 ),
