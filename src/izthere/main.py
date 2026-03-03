@@ -91,10 +91,3 @@ def main() -> None:
         asyncio.run(setup())
     except KeyboardInterrupt:
         logger.info("stopped")
-
-
-if __name__ == "__main__":
-    try:
-        asyncio.run(setup())
-    except KeyboardInterrupt:
-        logger.info("stopped")
