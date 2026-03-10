@@ -61,9 +61,9 @@ Monitors and Notifiers implement an interface, so you can extend it to anything 
 
 Monitors:
 
-1. `html_word` look for some keywords are found inside the visible content of a web page
-2. `xpath_word` look for some keywords are found inside a specific section (`xpath` and children) of a web page
-3. `ashby_board` look for jobs with keywords in their title available in a given location on an Ashby board
+1. `html_word` look for some keywords inside the visible content of a web page
+2. `xpath_word` look for some keywords inside a specific section (`xpath` and children) of a web page
+3. `json_api` parse and apply condition to (a collection of) json objects with support for nested parsers to parse complex objects.
 
 Notifiers:
 
